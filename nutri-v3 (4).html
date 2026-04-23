@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nutri — Jabez</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --g:#2D6A4F;--gl:#B7E4C7;--gp:#F0FAF4;
+  --am:#B86B22;--aml:#FAEEDD;
+  --rd:#C0392B;--rdl:#FCEBEB;
+  --bl:#1D4ED8;--bll:#EFF6FF;
+  --pu:#7C3AED;--pul:#F5F3FF;
+  --tx:#1A1A1A;--tx2:#555;--tx3:#999;
+  --br:#E6E4DE;--bg:#F5F4F0;--wh:#fff;
+  --r:14px;--rs:8px;--shadow:0 1px 3px rgba(0,0,0,.07);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;}
+/* TOPBAR */
+.topbar{background:var(--wh);border-bottom:1px solid var(--br);padding:0 18px;display:flex;align-items:center;justify-content:space-between;height:54px;position:sticky;top:0;z-index:200;box-shadow:var(--shadow);}
+.brand{font-family:'DM Serif Display',serif;font-size:21px;color:var(--g);letter-spacing:-.3px;}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+.sync-dot{width:8px;height:8px;border-radius:50%;background:var(--g);}
+.sync-dot.loading{background:var(--am);animation:pulse 1s infinite;}
+.sync-dot.error{background:var(--rd);}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+.topbar-date{font-size:12px;color:var(--tx3);}
+/* NAV */
+.nav{background:var(--wh);border-bottom:1px solid var(--br);display:flex;overflow-x:auto;position:sticky;top:54px;z-index:199;box-shadow:var(--shadow);}
+.nav::-webkit-scrollbar{display:none;}
+.nb{padding:12px 14px;font-size:13px;font-family:'DM Sans',sans-serif;border:none;background:transparent;cursor:pointer;color:var(--tx3);white-space:nowrap;border-bottom:2px solid transparent;transition:all .15s;}
+.nb.active{color:var(--g);border-bottom-color:var(--g);font-weight:500;}
+/* PAGES */
+.page{display:none;padding:18px;max-width:700px;margin:0 auto;}
+.page.active{display:block;}
+/* CARDS */
+.card{background:var(--wh);border:1px solid var(--br);border-radius:var(--r);padding:16px 18px;margin-bottom:12px;box-shadow:var(--shadow);}
+.ctitle{font-size:11px;font-weight:500;color:var(--tx3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:13px;display:flex;align-items:center;justify-content:space-between;}
+/* HERO */
+.hero{background:linear-gradient(135deg,#2D6A4F,#1B4332);border-radius:var(--r);padding:20px;margin-bottom:12px;color:#fff;box-shadow:var(--shadow);}
+.hero h2{font-family:'DM Serif Display',serif;font-size:24px;font-weight:400;}
+.hero-sub{font-size:12px;opacity:.7;margin-top:3px;}
+.hero-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-top:16px;}
+.hs{text-align:center;padding:0 4px;}
+.hs-n{font-size:18px;font-weight:600;}
+.hs-l{font-size:10px;opacity:.65;margin-top:2px;}
+.hdiv{width:1px;background:rgba(255,255,255,.15);}
+/* ÁGUA */
+.agua-n{font-family:'DM Serif Display',serif;font-size:44px;color:var(--g);text-align:center;line-height:1;}
+.agua-meta{font-size:12px;color:var(--tx3);text-align:center;margin-top:3px;}
+.agua-bar-w{background:var(--bg);border-radius:99px;height:9px;margin:11px 0;overflow:hidden;}
+.agua-bar{background:linear-gradient(90deg,var(--g),#52B788);height:100%;border-radius:99px;transition:width .4s;}
+.agua-btns{display:flex;gap:7px;}
+.abtn{flex:1;padding:9px 4px;border:1px solid var(--br);border-radius:var(--rs);background:var(--wh);font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;color:var(--tx);transition:all .15s;}
+.abtn:hover{background:var(--gp);border-color:var(--g);color:var(--g);}
+.abtn.rst{color:var(--tx3);}
+/* SUPP / REF */
+.si{display:flex;align-items:center;gap:11px;padding:9px 0;border-bottom:1px solid var(--br);cursor:pointer;transition:background .1s;}
+.si:last-child{border-bottom:none;}
+.si:hover{background:var(--bg);margin:0 -4px;padding-left:4px;padding-right:4px;border-radius:var(--rs);}
+.sc{width:22px;height:22px;border-radius:50%;border:2px solid var(--br);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;}
+.si.done .sc{background:var(--g);border-color:var(--g);}
+.si.done .sc::after{content:'✓';color:#fff;font-size:11px;}
+.si-name{font-size:13px;font-weight:500;color:var(--tx);}
+.si.done .si-name{text-decoration:line-through;color:var(--tx3);}
+.si-detail{font-size:11px;color:var(--tx3);margin-top:1px;}
+.ri{display:flex;align-items:flex-start;gap:11px;padding:10px 0;border-bottom:1px solid var(--br);cursor:pointer;}
+.ri:last-child{border-bottom:none;}
+.rc{width:22px;height:22px;border-radius:var(--rs);border:2px solid var(--br);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;transition:all .15s;}
+.ri.done .rc{background:var(--g);border-color:var(--g);}
+.ri.done .rc::after{content:'✓';color:#fff;font-size:10px;}
+.ri-top{display:flex;align-items:center;gap:7px;margin-bottom:3px;}
+.ri-label{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.4px;color:var(--tx3);}
+.ri-hora{font-size:10px;color:#fff;background:var(--g);padding:2px 8px;border-radius:99px;}
+.ri-hora.pre{background:var(--am);}
+.ri-hora.pos{background:var(--bl);}
+.ri-text{font-size:13px;color:var(--tx);line-height:1.5;}
+.ri.done .ri-text{text-decoration:line-through;color:var(--tx3);}
+.ri-obs{font-size:11px;color:var(--am);margin-top:3px;font-style:italic;}
+/* TRACKER */
+.tracker-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-top:4px;}
+.tracker-label-row{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:4px;}
+.tl{font-size:10px;color:var(--tx3);text-align:center;font-weight:500;}
+.tc{width:100%;aspect-ratio:1;border-radius:5px;border:none;cursor:pointer;font-size:10px;transition:all .15s;display:flex;align-items:center;justify-content:center;}
+.tc.empty{background:transparent;border:1px dashed var(--br);cursor:default;}
+.tc.none{background:#F0EDE8;color:var(--tx3);}
+.tc.partial{background:#FDE68A;color:#92400E;}
+.tc.full{background:var(--g);color:#fff;}
+.tc.today{outline:2px solid var(--am);outline-offset:1px;}
+.tc-num{font-size:9px;line-height:1;}
+/* INPUTS */
+.input-row{display:flex;gap:9px;align-items:flex-end;margin-bottom:13px;}
+.ig{flex:1;}
+.ig label{font-size:11px;color:var(--tx2);display:block;margin-bottom:4px;}
+.ig input,.ig select,.ig textarea{width:100%;padding:9px 11px;border:1px solid var(--br);border-radius:var(--rs);font-size:13px;font-family:'DM Sans',sans-serif;background:var(--wh);color:var(--tx);outline:none;transition:border .15s;}
+.ig input:focus,.ig select:focus,.ig textarea:focus{border-color:var(--g);}
+.ig textarea{resize:vertical;min-height:60px;}
+.btn-p{padding:9px 16px;background:var(--g);color:#fff;border:none;border-radius:var(--rs);font-size:13px;font-family:'DM Sans',sans-serif;font-weight:500;cursor:pointer;white-space:nowrap;transition:background .15s;}
+.btn-p:hover{background:#215040;}
+.btn-p:disabled{opacity:.5;cursor:default;}
+.btn-sec{padding:9px 14px;background:var(--wh);color:var(--tx);border:1px solid var(--br);border-radius:var(--rs);font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .15s;}
+.btn-sec:hover{border-color:var(--g);color:var(--g);}
+.btn-d{padding:5px 9px;background:transparent;color:var(--rd);border:1px solid #F5C6C2;border-radius:var(--rs);font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;}
+/* PESO */
+.chart-wrap{position:relative;width:100%;height:170px;margin-top:8px;}
+.no-data{text-align:center;padding:35px 0;color:var(--tx3);font-size:13px;}
+.prog-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:13px;}
+.pstat{background:var(--bg);border-radius:var(--rs);padding:11px;text-align:center;}
+.pstat-n{font-family:'DM Serif Display',serif;font-size:22px;color:var(--tx);}
+.pstat-l{font-size:10px;color:var(--tx3);margin-top:2px;}
+.pe{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--br);}
+.pe:last-child{border-bottom:none;}
+.pe-date{font-size:12px;color:var(--tx2);}
+.pe-val{font-size:14px;font-weight:500;}
+.pdelta{font-size:11px;padding:2px 6px;border-radius:99px;margin-left:5px;}
+.dn{background:var(--gp);color:var(--g);}
+.dp{background:var(--rdl);color:var(--rd);}
+/* GASTOS */
+.gasto-item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--br);}
+.gasto-item:last-child{border-bottom:none;}
+.gasto-tipo{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.gasto-tipo.entrada{background:var(--gp);}
+.gasto-tipo.saida{background:var(--rdl);}
+.gasto-info{flex:1;min-width:0;}
+.gasto-desc{font-size:13px;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.gasto-meta{font-size:11px;color:var(--tx3);margin-top:1px;}
+.gasto-val{font-size:14px;font-weight:600;flex-shrink:0;}
+.gasto-val.entrada{color:var(--g);}
+.gasto-val.saida{color:var(--rd);}
+/* CUSTO */
+.custo-i{display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid var(--br);}
+.custo-i:last-child{border-bottom:none;}
+.custo-nome{flex:1;}
+.custo-sub{font-size:11px;color:var(--tx3);margin-top:1px;}
+.custo-inp{width:80px;padding:6px 8px;border:1px solid var(--br);border-radius:var(--rs);font-size:13px;font-family:'DM Sans',sans-serif;text-align:right;outline:none;}
+.custo-inp:focus{border-color:var(--g);}
+.total-bar{background:var(--gp);border:1px solid var(--gl);border-radius:var(--rs);padding:13px 15px;display:flex;justify-content:space-between;align-items:center;margin-top:6px;}
+.total-bar.warn{background:var(--aml);border-color:#f0c070;}
+.total-label{font-size:13px;color:var(--g);font-weight:500;}
+.total-bar.warn .total-label,.total-bar.warn .total-val{color:var(--am);}
+.total-val{font-family:'DM Serif Display',serif;font-size:22px;color:var(--g);}
+/* COMPRAS */
+.cs{margin-bottom:14px;}
+.cs-title{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.6px;color:var(--tx3);margin-bottom:7px;}
+.ci{display:flex;align-items:center;gap:9px;padding:8px 0;border-bottom:1px solid var(--br);cursor:pointer;}
+.ci:last-child{border-bottom:none;}
+.cc{width:19px;height:19px;border-radius:4px;border:1.5px solid var(--br);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.ci.bought .cc{background:var(--g);border-color:var(--g);}
+.ci.bought .cc::after{content:'✓';color:#fff;font-size:10px;}
+.ci-name{font-size:13px;color:var(--tx);}
+.ci.bought .ci-name{text-decoration:line-through;color:var(--tx3);}
+.ci-preco{font-size:12px;color:var(--tx3);margin-left:auto;}
+/* ALERT */
+.alert{border-left:3px solid;padding:9px 12px;border-radius:0 var(--rs) var(--rs) 0;margin-bottom:10px;font-size:12px;line-height:1.6;}
+.ag{border-color:var(--g);background:var(--gp);color:var(--g);}
+.aa{border-color:var(--am);background:var(--aml);color:var(--am);}
+.ab{border-color:var(--bl);background:var(--bll);color:var(--bl);}
+/* BADGES */
+.badge{font-size:10px;padding:2px 7px;border-radius:99px;font-weight:500;display:inline-block;}
+.bg{background:var(--gp);color:var(--g);}
+.ba{background:var(--aml);color:var(--am);}
+.br{background:var(--rdl);color:var(--rd);}
+/* DASHBOARD STATS */
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+.dash-stat{background:var(--wh);border:1px solid var(--br);border-radius:var(--r);padding:14px 16px;box-shadow:var(--shadow);}
+.dash-stat-label{font-size:11px;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}
+.dash-stat-val{font-family:'DM Serif Display',serif;font-size:28px;color:var(--tx);}
+.dash-stat-sub{font-size:11px;color:var(--tx3);margin-top:3px;}
+.dash-bar{height:4px;border-radius:99px;background:var(--bg);margin-top:8px;overflow:hidden;}
+.dash-bar-fill{height:100%;border-radius:99px;background:var(--g);transition:width .5s;}
+/* IA CHAT */
+.chat-wrap{border:1px solid var(--br);border-radius:var(--r);overflow:hidden;}
+.chat-messages{height:250px;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px;background:var(--bg);}
+.msg{max-width:85%;padding:9px 12px;border-radius:10px;font-size:13px;line-height:1.5;}
+.msg.user{align-self:flex-end;background:var(--g);color:#fff;border-radius:10px 10px 2px 10px;}
+.msg.ai{align-self:flex-start;background:var(--wh);color:var(--tx);border:1px solid var(--br);border-radius:10px 10px 10px 2px;}
+.msg.ai.loading{color:var(--tx3);font-style:italic;}
+.chat-input-row{display:flex;gap:0;border-top:1px solid var(--br);}
+.chat-inp{flex:1;padding:10px 13px;border:none;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;background:var(--wh);}
+.chat-send{padding:10px 16px;background:var(--g);color:#fff;border:none;cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif;font-weight:500;transition:background .15s;}
+.chat-send:hover{background:#215040;}
+/* IMAGENS */
+.img-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:4px;}
+.img-card{border-radius:var(--rs);overflow:hidden;border:1px solid var(--br);aspect-ratio:1;position:relative;cursor:pointer;}
+.img-card img{width:100%;height:100%;object-fit:cover;}
+.img-card-overlay{position:absolute;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s;}
+.img-card:hover .img-card-overlay{opacity:1;}
+.img-del{color:#fff;font-size:18px;cursor:pointer;}
+.upload-btn{border:2px dashed var(--br);border-radius:var(--rs);padding:20px;text-align:center;cursor:pointer;font-size:13px;color:var(--tx3);transition:all .15s;}
+.upload-btn:hover{border-color:var(--g);color:var(--g);}
+.file-inp{display:none;}
+/* MODAL */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;align-items:center;justify-content:center;padding:20px;}
+.modal-bg.open{display:flex;}
+.modal{background:var(--wh);border-radius:var(--r);padding:20px;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,.2);}
+.modal h3{font-family:'DM Serif Display',serif;font-size:20px;margin-bottom:14px;}
+.modal-close{float:right;background:none;border:none;font-size:20px;cursor:pointer;color:var(--tx3);}
+/* PL ROWS */
+.pl-row{display:flex;justify-content:space-between;align-items:flex-start;padding:7px 0;border-bottom:1px solid var(--br);font-size:13px;gap:12px;}
+.pl-row:last-child{border-bottom:none;}
+.pl-lbl{color:var(--tx2);}
+.pl-val{font-weight:500;text-align:right;}
+.section-sep{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.5px;color:var(--tx3);padding:12px 0 5px;}
+/* TAG chips */
+.tag{font-size:11px;padding:2px 8px;border-radius:99px;display:inline-block;margin-right:4px;}
+.tag-alimentacao{background:#EFF6FF;color:#1D4ED8;}
+.tag-swile{background:#F5F3FF;color:#7C3AED;}
+.tag-suplemento{background:#FEF3C7;color:#92400E;}
+.tag-mercado{background:#ECFDF5;color:#065F46;}
+.tag-outro{background:#F3F4F6;color:#374151;}
+/* Loading spinner */
+.spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;display:inline-block;}
+@keyframes spin{to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+
+<!-- MODAL GASTO -->
+<div class="modal-bg" id="modal-gasto">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-gasto')">×</button>
+    <h3 id="modal-gasto-title">Novo lançamento</h3>
+    <div class="ig" style="margin-bottom:10px"><label>Tipo</label>
+      <select id="mg-tipo">
+        <option value="saida">Saída (gasto)</option>
+        <option value="entrada">Entrada</option>
+      </select>
+    </div>
+    <div class="ig" style="margin-bottom:10px"><label>Categoria</label>
+      <select id="mg-cat">
+        <option value="alimentacao">Alimentação</option>
+        <option value="mercado">Mercado</option>
+        <option value="swile">Swile (VR)</option>
+        <option value="suplemento">Suplemento</option>
+        <option value="treino">Treino</option>
+        <option value="outro">Outro</option>
+      </select>
+    </div>
+    <div class="ig" style="margin-bottom:10px"><label>Descrição</label><input type="text" id="mg-desc" placeholder="Ex: frango no Walmart"></div>
+    <div class="input-row">
+      <div class="ig"><label>Valor (R$)</label><input type="number" id="mg-val" placeholder="0,00" step="0.01"></div>
+      <div class="ig"><label>Meio de pagamento</label>
+        <select id="mg-meio">
+          <option value="swile">Swile</option>
+          <option value="pix">Pix</option>
+          <option value="dinheiro">Dinheiro</option>
+          <option value="cartao">Cartão</option>
+        </select>
+      </div>
+    </div>
+    <div class="ig" style="margin-bottom:14px"><label>Data</label><input type="date" id="mg-data"></div>
+    <button class="btn-p" style="width:100%" id="mg-salvar" onclick="salvarGasto()">Salvar</button>
+  </div>
+</div>
+
+<!-- MODAL IMAGEM FULL -->
+<div class="modal-bg" id="modal-img">
+  <div style="max-width:600px;width:100%;position:relative;">
+    <button style="position:absolute;top:-36px;right:0;background:none;border:none;color:#fff;font-size:28px;cursor:pointer;" onclick="closeModal('modal-img')">×</button>
+    <img id="modal-img-src" src="" style="width:100%;border-radius:var(--r);display:block;">
+  </div>
+</div>
+
+<div class="topbar">
+  <div class="brand">Nutri</div>
+  <div class="topbar-right">
+    <div class="sync-dot" id="sync-dot" title="Supabase"></div>
+    <div class="topbar-date" id="tb-date"></div>
+  </div>
+</div>
+
+<nav class="nav">
+  <button class="nb active" onclick="showPage('dash',this)">Dashboard</button>
+  <button class="nb" onclick="showPage('hoje',this)">Hoje</button>
+  <button class="nb" onclick="showPage('tracker',this)">Tracker</button>
+  <button class="nb" onclick="showPage('peso',this)">Peso</button>
+  <button class="nb" onclick="showPage('gastos',this)">Gastos</button>
+  <button class="nb" onclick="showPage('custo',this)">Dieta $</button>
+  <button class="nb" onclick="showPage('compras',this)">Compras</button>
+  <button class="nb" onclick="showPage('imagens',this)">Fotos</button>
+  <button class="nb" onclick="showPage('ia',this)">IA</button>
+  <button class="nb" onclick="showPage('plano',this)">Plano</button>
+</nav>
+
+<!-- ========== DASHBOARD ========== -->
+<div id="page-dash" class="page active">
+  <div class="hero">
+    <h2 id="hero-greet">Bom dia, Jabez</h2>
+    <div class="hero-sub" id="hero-sub"></div>
+    <div class="hero-stats">
+      <div class="hs"><div class="hs-n" id="h-ref">—</div><div class="hs-l">Refeições</div></div>
+      <div class="hs"><div class="hs-n" id="h-agua">—</div><div class="hs-l">Água</div></div>
+      <div class="hs"><div class="hs-n" id="h-supp">—</div><div class="hs-l">Supp</div></div>
+      <div class="hs"><div class="hs-n" id="h-treino">—</div><div class="hs-l">Treino</div></div>
+    </div>
+  </div>
+
+  <div class="dash-grid">
+    <div class="dash-stat">
+      <div class="dash-stat-label">Gasto este mês</div>
+      <div class="dash-stat-val" id="dash-gasto-mes">R$ —</div>
+      <div class="dash-stat-sub" id="dash-gasto-sub">carregando...</div>
+    </div>
+    <div class="dash-stat">
+      <div class="dash-stat-label">Saldo Swile</div>
+      <div class="dash-stat-val" id="dash-swile">R$ —</div>
+      <div class="dash-stat-sub">entradas − saídas swile</div>
+    </div>
+    <div class="dash-stat">
+      <div class="dash-stat-label">Peso atual</div>
+      <div class="dash-stat-val" id="dash-peso">— kg</div>
+      <div class="dash-stat-sub" id="dash-peso-delta"></div>
+    </div>
+    <div class="dash-stat">
+      <div class="dash-stat-label">Streak 🔥</div>
+      <div class="dash-stat-val" id="dash-streak">—</div>
+      <div class="dash-stat-sub">dias consecutivos</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ctitle">Gastos por categoria (mês)</div>
+    <div style="height:160px"><canvas id="dash-chart"></canvas></div>
+  </div>
+
+  <div class="card">
+    <div class="ctitle">Últimos lançamentos</div>
+    <div id="dash-ultimos"><div class="no-data">Carregando...</div></div>
+  </div>
+</div>
+
+<!-- ========== HOJE ========== -->
+<div id="page-hoje" class="page">
+  <div class="card">
+    <div class="ctitle">💧 Água
+      <span id="agua-pct" style="font-size:12px;font-weight:600;color:var(--g);">0%</span>
+    </div>
+    <div class="agua-n" id="agua-n">0,0L</div>
+    <div class="agua-meta">Meta: 3,0L/dia</div>
+    <div class="agua-bar-w"><div class="agua-bar" id="agua-bar" style="width:0%"></div></div>
+    <div class="agua-btns">
+      <button class="abtn" onclick="addAgua(0.2)">+200ml</button>
+      <button class="abtn" onclick="addAgua(0.3)">+300ml</button>
+      <button class="abtn" onclick="addAgua(0.5)">+500ml</button>
+      <button class="abtn rst" onclick="resetAgua()">Reset</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="ctitle">💊 Suplementos — pós-treino ~21h</div>
+    <div id="supp-list">
+      <div class="si" id="si-0" onclick="toggleSupp(0)"><div class="sc"></div><div><div class="si-name">Aminoácidos Essenciais</div><div class="si-detail">1 sachê + 200ml água · todo dia</div></div></div>
+      <div class="si" id="si-1" onclick="toggleSupp(1)"><div class="sc"></div><div><div class="si-name">Creatina Monoidratada</div><div class="si-detail">3g + 250ml água · todo dia</div></div></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="ctitle">🍽️ Refeições do dia</div>
+    <div id="ref-list">
+      <div class="ri" id="ri-0" onclick="toggleRef(0)"><div class="rc"></div><div style="flex:1"><div class="ri-top"><span class="ri-label">Desjejum</span><span class="ri-hora">07h00</span></div><div class="ri-text">2 fatias pão integral + 1 ovo mexido no azeite + 1 copo leite desnatado + 1 banana + linhaça</div></div></div>
+      <div class="ri" id="ri-1" onclick="toggleRef(1)"><div class="rc"></div><div style="flex:1"><div class="ri-top"><span class="ri-label">Colação</span><span class="ri-hora">09h30</span></div><div class="ri-text">1 maçã ou banana + 1 copo leite desnatado</div></div></div>
+      <div class="ri" id="ri-2" onclick="toggleRef(2)"><div class="rc"></div><div style="flex:1"><div class="ri-top"><span class="ri-label">Almoço</span><span class="ri-hora">12h00</span></div><div class="ri-text">Alface + tomate + cenoura · arroz integral + ½ concha feijão + frango grelhado + 1 fruta</div></div></div>
+      <div class="ri" id="ri-3" onclick="toggleRef(3)"><div class="rc"></div><div style="flex:1"><div class="ri-top"><span class="ri-label">Lanche I</span><span class="ri-hora">14h30</span></div><div class="ri-text">1 fruta + 1 copo leite desnatado</div></div></div>
+      <div class="ri" id="ri-4" onclick="toggleRef(4)"><div class="rc"></div><div style="flex:1"><div class="ri-top"><span class="ri-label">Lanche II</span><span class="ri-hora">17h00</span></div><div class="ri-text">2 fatias pão integral + 1 ovo cozido ou ricota · 1 copo leite desnatado</div></div></div>
+      <div class="ri" id="ri-5" onclick="toggleRef(5)"><div class="rc"></div><div style="flex:1"><div class="ri-top"><span class="ri-label">Ceia — pré-treino</span><span class="ri-hora pre">17h30</span></div><div class="ri-text">1 banana ou maçã · 3 biscoitos água e sal integral</div><div class="ri-obs">⚡ Baixo IG — energia pro treino</div></div></div>
+      <div class="ri" id="ri-6" onclick="toggleRef(6)"><div class="rc"></div><div style="flex:1"><div class="ri-top"><span class="ri-label">Jantar — pós-treino</span><span class="ri-hora pos">21h00</span></div><div class="ri-text">Alface + tomate · arroz integral + feijão + 2 ovos ou atum + 1 banana madura</div><div class="ri-obs">🔵 Alto IG + proteína + suplementos</div></div></div>
+    </div>
+    <div style="margin-top:12px;">
+      <div class="ig"><label>Obs do dia (opcional)</label><textarea id="obs-dia" placeholder="Como foi o dia, como você se sentiu..."></textarea></div>
+      <button class="btn-p" style="margin-top:8px;width:100%" onclick="salvarDia()">💾 Salvar dia no Supabase</button>
+    </div>
+  </div>
+  <!-- Treino toggle -->
+  <div class="card">
+    <div class="ctitle">🥊 Treino hoje?</div>
+    <div class="si" id="treino-toggle" onclick="toggleTreino()">
+      <div class="sc" id="treino-sc"></div>
+      <div><div class="si-name" id="treino-name">Não treinei</div><div class="si-detail">19h30–20h30 · Teixeira Team</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== TRACKER ========== -->
+<div id="page-tracker" class="page">
+  <div class="card">
+    <div class="ctitle">
+      <span>📅 Tracker de adesão — <span id="tracker-mes-label"></span></span>
+      <div style="display:flex;gap:6px">
+        <button class="btn-sec" style="padding:5px 10px;font-size:12px" onclick="trackerMes(-1)">‹</button>
+        <button class="btn-sec" style="padding:5px 10px;font-size:12px" onclick="trackerMes(1)">›</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:14px;margin-bottom:12px;font-size:12px;">
+      <span><span style="display:inline-block;width:12px;height:12px;background:var(--g);border-radius:3px;vertical-align:middle;margin-right:4px"></span>Completo</span>
+      <span><span style="display:inline-block;width:12px;height:12px;background:#FDE68A;border-radius:3px;vertical-align:middle;margin-right:4px"></span>Parcial</span>
+      <span><span style="display:inline-block;width:12px;height:12px;background:#F0EDE8;border:1px solid var(--br);border-radius:3px;vertical-align:middle;margin-right:4px"></span>Não seguiu</span>
+    </div>
+    <div class="tracker-label-row" id="tracker-day-labels"></div>
+    <div class="tracker-grid" id="tracker-grid"></div>
+  </div>
+  <div class="card">
+    <div class="ctitle">📊 Estatísticas do mês</div>
+    <div class="dash-grid" style="margin-bottom:0">
+      <div class="pstat"><div class="pstat-n" id="tr-completos">—</div><div class="pstat-l">Dias completos</div></div>
+      <div class="pstat"><div class="pstat-n" id="tr-parciais">—</div><div class="pstat-l">Dias parciais</div></div>
+      <div class="pstat"><div class="pstat-n" id="tr-treinos">—</div><div class="pstat-l">Treinos</div></div>
+      <div class="pstat"><div class="pstat-n" id="tr-pct">—%</div><div class="pstat-l">Adesão</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== PESO ========== -->
+<div id="page-peso" class="page">
+  <div class="card">
+    <div class="ctitle">⚖️ Registrar peso</div>
+    <div class="input-row">
+      <div class="ig"><label>Data</label><input type="date" id="peso-data"></div>
+      <div class="ig" style="max-width:110px"><label>Peso (kg)</label><input type="number" id="peso-val" placeholder="90,0" step="0.1" min="40" max="200"></div>
+      <button class="btn-p" onclick="addPeso()">Salvar</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="ctitle">📈 Evolução</div>
+    <div class="prog-stats">
+      <div class="pstat"><div class="pstat-n" id="ps-ini">—</div><div class="pstat-l">Inicial (kg)</div></div>
+      <div class="pstat"><div class="pstat-n" id="ps-cur">—</div><div class="pstat-l">Atual (kg)</div></div>
+      <div class="pstat"><div class="pstat-n" id="ps-dlt">—</div><div class="pstat-l">Variação</div></div>
+    </div>
+    <div class="chart-wrap"><canvas id="peso-chart" height="160"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="ctitle">📋 Histórico</div>
+    <div id="peso-lista"><div class="no-data">Nenhum registro ainda</div></div>
+  </div>
+</div>
+
+<!-- ========== GASTOS ========== -->
+<div id="page-gastos" class="page">
+  <div style="display:flex;gap:8px;margin-bottom:12px;">
+    <button class="btn-p" onclick="openModal('modal-gasto')">+ Lançamento</button>
+    <select id="gastos-filtro-mes" class="btn-sec" style="font-family:'DM Sans',sans-serif;cursor:pointer;" onchange="loadGastos()"></select>
+  </div>
+  <div class="dash-grid">
+    <div class="dash-stat">
+      <div class="dash-stat-label">Entradas</div>
+      <div class="dash-stat-val" style="color:var(--g)" id="gst-entradas">R$ —</div>
+    </div>
+    <div class="dash-stat">
+      <div class="dash-stat-label">Saídas</div>
+      <div class="dash-stat-val" style="color:var(--rd)" id="gst-saidas">R$ —</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="ctitle">Lançamentos</div>
+    <div id="gastos-lista"><div class="no-data">Carregando...</div></div>
+  </div>
+</div>
+
+<!-- ========== CUSTO DIETA ========== -->
+<div id="page-custo" class="page">
+  <div class="alert aa">Meta: R$ 500–600/mês. Preços editáveis e sincronizados com Supabase.</div>
+  <div class="card">
+    <div class="ctitle">🛒 Custo semanal</div>
+    <div id="custo-lista"></div>
+    <div class="total-bar" id="total-bar-sem"><div class="total-label">Total semanal</div><div class="total-val" id="custo-sem">R$ —</div></div>
+    <div style="margin-top:8px;font-size:12px;color:var(--tx3)">Mensal estimado (×4): <strong id="custo-men">R$ —</strong></div>
+  </div>
+  <div class="card">
+    <div class="ctitle">💊 Suplementos</div>
+    <div class="input-row" style="margin-bottom:0">
+      <div class="ig"><label>Aminoácidos/mês R$</label><input type="number" id="supp-c" placeholder="0" oninput="calcCustoTotal()"></div>
+      <div class="ig"><label>Creatina 300g R$</label><input type="number" id="creat-c" placeholder="0" oninput="calcCustoTotal()"></div>
+    </div>
+    <div style="font-size:11px;color:var(--tx3);margin-top:8px;margin-bottom:12px">Creatina rende ~100 dias. Aminoácidos = 60 dias.</div>
+    <div class="total-bar" id="total-bar-men"><div class="total-label">Total mensal (alim. + supp.)</div><div class="total-val" id="custo-men-total">R$ —</div></div>
+  </div>
+</div>
+
+<!-- ========== COMPRAS ========== -->
+<div id="page-compras" class="page">
+  <div class="card">
+    <div class="ctitle">🛒 Lista semanal — econômica</div>
+    <div id="compras-lista"></div>
+    <button class="btn-sec" style="margin-top:10px;width:100%" onclick="clearCompras()">Desmarcar tudo</button>
+  </div>
+</div>
+
+<!-- ========== IMAGENS ========== -->
+<div id="page-imagens" class="page">
+  <div class="card">
+    <div class="ctitle">📸 Fotos — comprovantes e progresso</div>
+    <div class="upload-btn" onclick="document.getElementById('file-inp').click()">
+      📎 Toque para adicionar foto
+      <div style="font-size:11px;margin-top:4px;color:var(--tx3)">Comprovante, progresso físico, receita...</div>
+    </div>
+    <input type="file" id="file-inp" class="file-inp" accept="image/*" multiple onchange="uploadImagens(this.files)">
+    <div style="margin:12px 0 6px">
+      <select id="img-tipo-sel" style="padding:7px 10px;border:1px solid var(--br);border-radius:var(--rs);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;">
+        <option value="comprovante">Comprovante</option>
+        <option value="progresso">Progresso físico</option>
+        <option value="receita">Receita</option>
+        <option value="outro">Outro</option>
+      </select>
+    </div>
+    <div class="img-grid" id="img-grid"><div class="no-data" style="grid-column:1/-1">Carregando...</div></div>
+  </div>
+</div>
+
+<!-- ========== IA ========== -->
+<div id="page-ia" class="page">
+  <div class="card">
+    <div class="ctitle">🤖 Assistente nutricional</div>
+    <div class="alert ab" style="font-size:12px">Me diga o que comeu, peça um lançamento de gasto, ou qualquer dúvida sobre o plano da Juliet.</div>
+    <div class="chat-wrap">
+      <div class="chat-messages" id="chat-msgs">
+        <div class="msg ai">Oi Jabez! Posso te ajudar com o plano alimentar, registrar gastos, ou tirar dúvidas sobre a dieta. Como posso ajudar?</div>
+      </div>
+      <div class="chat-input-row">
+        <input class="chat-inp" id="chat-inp" placeholder="Ex: gastei R$15 de frango no mercado..." onkeydown="if(event.key==='Enter')sendChat()">
+        <button class="chat-send" onclick="sendChat()" id="chat-btn">Enviar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== PLANO ========== -->
+<div id="page-plano" class="page">
+  <div class="card">
+    <div class="alert ag">Juliet Marzalek · CRN8 1182 · Avaliação 11/04/2026</div>
+    <div class="section-sep">⏰ Horários</div>
+    <div class="pl-row"><span class="pl-lbl">07h00</span><span class="pl-val">Desjejum</span></div>
+    <div class="pl-row"><span class="pl-lbl">09h30</span><span class="pl-val">Colação</span></div>
+    <div class="pl-row"><span class="pl-lbl">12h00</span><span class="pl-val">Almoço</span></div>
+    <div class="pl-row"><span class="pl-lbl">14h30</span><span class="pl-val">Lanche I</span></div>
+    <div class="pl-row"><span class="pl-lbl">17h00</span><span class="pl-val">Lanche II</span></div>
+    <div class="pl-row"><span class="pl-lbl">17h30</span><span class="pl-val">🟡 Ceia pré-treino (baixo IG)</span></div>
+    <div class="pl-row"><span class="pl-lbl">19h30</span><span class="pl-val">🥊 Treino</span></div>
+    <div class="pl-row"><span class="pl-lbl">21h00</span><span class="pl-val">🔵 Jantar pós-treino (alto IG + proteína)</span></div>
+    <div class="section-sep">📊 Metas</div>
+    <div class="pl-row"><span class="pl-lbl">Calorias totais</span><span class="pl-val">~2160 kcal/dia</span></div>
+    <div class="pl-row"><span class="pl-lbl">Água mínima</span><span class="pl-val">3,0L/dia</span></div>
+    <div class="pl-row"><span class="pl-lbl">Entre refeições</span><span class="pl-val">A cada 2h30</span></div>
+    <div class="section-sep">💊 Suplementos</div>
+    <div class="pl-row"><span class="pl-lbl">Aminoácidos</span><span class="pl-val">1 sachê/dia · 60 dias</span></div>
+    <div class="pl-row"><span class="pl-lbl">Creatina</span><span class="pl-val">3g/dia · sempre</span></div>
+    <div class="section-sep">📋 Bioimpedância</div>
+    <div class="pl-row"><span class="pl-lbl">Peso / Altura</span><span class="pl-val">90,0kg · 181cm</span></div>
+    <div class="pl-row"><span class="pl-lbl">Massa muscular</span><span class="pl-val">44,2kg · Acima ↑</span></div>
+    <div class="pl-row"><span class="pl-lbl">Gordura</span><span class="pl-val">13,7kg · 15,2%</span></div>
+    <div class="pl-row"><span class="pl-lbl">IMC / TMB</span><span class="pl-val">27,5 · 2019 kcal</span></div>
+    <div class="alert aa" style="margin-top:12px">Porções: 9 pães/cereais · 6 hortaliças · 5 frutas · 4 leite · 2½ carnes · 2 gorduras</div>
+  </div>
+</div>
+
+<script>
+// =========================================
+// CONFIG SUPABASE
+// =========================================
+const SB_URL = 'https://fcmxvgkkfuipvpycqimg.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZjbXh2Z2trZnVpcHZweWNxaW1nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5MTk4NjksImV4cCI6MjA5MjQ5NTg2OX0.KdsR_9fPck989zUAdtTDdos7GZwxYThDrtkwyLM_3oo';
+const SB_HDR = {'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY};
+
+async function sbGet(table, params=''){
+  setSyncState('loading');
+  try{
+    const r=await fetch(`${SB_URL}/rest/v1/${table}${params}`,{headers:SB_HDR});
+    if(!r.ok) throw new Error(await r.text());
+    setSyncState('ok');
+    return await r.json();
+  }catch(e){setSyncState('error');console.error(e);return null;}
+}
+async function sbPost(table, body){
+  setSyncState('loading');
+  try{
+    const r=await fetch(`${SB_URL}/rest/v1/${table}`,{method:'POST',headers:{...SB_HDR,'Prefer':'return=representation'},body:JSON.stringify(body)});
+    setSyncState('ok');
+    return await r.json();
+  }catch(e){setSyncState('error');console.error(e);return null;}
+}
+async function sbPatch(table, params, body){
+  setSyncState('loading');
+  try{
+    const r=await fetch(`${SB_URL}/rest/v1/${table}${params}`,{method:'PATCH',headers:{...SB_HDR,'Prefer':'return=representation'},body:JSON.stringify(body)});
+    setSyncState('ok');
+    return await r.json();
+  }catch(e){setSyncState('error');console.error(e);return null;}
+}
+async function sbDelete(table, params){
+  setSyncState('loading');
+  try{
+    await fetch(`${SB_URL}/rest/v1/${table}${params}`,{method:'DELETE',headers:SB_HDR});
+    setSyncState('ok');
+  }catch(e){setSyncState('error');console.error(e);}
+}
+function setSyncState(s){
+  const d=document.getElementById('sync-dot');
+  d.className='sync-dot'+(s==='loading'?' loading':s==='error'?' error':'');
+}
+
+// =========================================
+// UTILS
+// =========================================
+const TODAY=new Date().toISOString().split('T')[0];
+const DIAS=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+const MESES=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+const MESES_FULL=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const now=new Date();
+const h=now.getHours();
+document.getElementById('tb-date').textContent=DIAS[now.getDay()]+', '+now.getDate()+' '+MESES[now.getMonth()];
+document.getElementById('hero-greet').textContent=(h<12?'Bom dia':h<18?'Boa tarde':'Boa noite')+', Jabez';
+document.getElementById('hero-sub').textContent='Juliet Marzalek · '+MESES[now.getMonth()]+' '+now.getFullYear();
+
+function fmt(n){return 'R$ '+Number(n).toFixed(2).replace('.',',');}
+
+// =========================================
+// DAY STATE (localStorage + Supabase)
+// =========================================
+function getDayState(){
+  const k='nutri3_'+TODAY;
+  const s=JSON.parse(localStorage.getItem(k)||'null');
+  if(s)return s;
+  const d={agua:0,supp:[false,false],ref:[false,false,false,false,false,false,false],treino:false,obs:''};
+  localStorage.setItem(k,JSON.stringify(d));return d;
+}
+function saveDayState(d){localStorage.setItem('nutri3_'+TODAY,JSON.stringify(d));}
+
+async function salvarDia(){
+  const d=getDayState();
+  d.obs=document.getElementById('obs-dia').value;
+  saveDayState(d);
+  const body={
+    data:TODAY,agua_litros:d.agua,
+    ref_desjejum:d.ref[0],ref_colacao:d.ref[1],ref_almoco:d.ref[2],
+    ref_lanche1:d.ref[3],ref_lanche2:d.ref[4],ref_ceia:d.ref[5],ref_jantar:d.ref[6],
+    supp_aminoacidos:d.supp[0],supp_creatina:d.supp[1],treino:d.treino,obs:d.obs,
+    updated_at:new Date().toISOString()
+  };
+  await sbPost('nutri_daily',body);
+  alert('✅ Dia salvo no Supabase!');
+}
+
+// =========================================
+// ÁGUA
+// =========================================
+function renderAgua(){
+  const d=getDayState();const l=d.agua;const pct=Math.round((l/3)*100);
+  document.getElementById('agua-n').textContent=l.toFixed(1)+'L';
+  document.getElementById('agua-bar').style.width=Math.min(100,pct)+'%';
+  document.getElementById('agua-pct').textContent=Math.min(100,pct)+'%';
+  document.getElementById('h-agua').textContent=l.toFixed(1)+'L';
+}
+function addAgua(v){const d=getDayState();d.agua=Math.round((d.agua+v)*10)/10;saveDayState(d);renderAgua();}
+function resetAgua(){const d=getDayState();d.agua=0;saveDayState(d);renderAgua();}
+
+// =========================================
+// SUPP / TREINO
+// =========================================
+function renderSupp(){
+  const d=getDayState();let done=0;
+  d.supp.forEach((v,i)=>{
+    const el=document.getElementById('si-'+i);
+    v?el.classList.add('done'):el.classList.remove('done');if(v)done++;
+  });
+  document.getElementById('h-supp').textContent=done+'/2';
+}
+function toggleSupp(i){const d=getDayState();d.supp[i]=!d.supp[i];saveDayState(d);renderSupp();}
+
+function renderTreino(){
+  const d=getDayState();
+  const el=document.getElementById('treino-toggle');
+  const sc=document.getElementById('treino-sc');
+  const nm=document.getElementById('treino-name');
+  if(d.treino){el.classList.add('done');nm.textContent='Treinei hoje! 🥊';}
+  else{el.classList.remove('done');nm.textContent='Não treinei ainda';}
+  document.getElementById('h-treino').textContent=d.treino?'✅':'—';
+}
+function toggleTreino(){const d=getDayState();d.treino=!d.treino;saveDayState(d);renderTreino();}
+
+// =========================================
+// REFEIÇÕES
+// =========================================
+function renderRef(){
+  const d=getDayState();let done=0;
+  d.ref.forEach((v,i)=>{
+    const el=document.getElementById('ri-'+i);
+    v?el.classList.add('done'):el.classList.remove('done');if(v)done++;
+  });
+  document.getElementById('h-ref').textContent=done+'/7';
+}
+function toggleRef(i){const d=getDayState();d.ref[i]=!d.ref[i];saveDayState(d);renderRef();}
+
+// =========================================
+// NAV
+// =========================================
+function showPage(name,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  if(btn)btn.classList.add('active');
+  const map={peso:renderPeso,custo:renderCusto,compras:renderCompras,imagens:renderImagens,gastos:loadGastos,dash:loadDash,tracker:renderTracker};
+  if(map[name])map[name]();
+}
+
+// =========================================
+// PESO
+// =========================================
+let pChart=null;
+document.getElementById('peso-data').value=TODAY;
+async function addPeso(){
+  const dt=document.getElementById('peso-data').value;
+  const vl=parseFloat(document.getElementById('peso-val').value);
+  if(!dt||isNaN(vl)||vl<40||vl>200)return;
+  await sbPost('nutri_peso',{data:dt,peso_kg:vl});
+  document.getElementById('peso-val').value='';
+  renderPeso();
+}
+async function deletePeso(id){
+  await sbDelete('nutri_peso',`?id=eq.${id}`);
+  renderPeso();
+}
+async function renderPeso(){
+  const arr=await sbGet('nutri_peso','?order=data.asc');
+  if(!arr||!arr.length){
+    ['ps-ini','ps-cur','ps-dlt'].forEach(id=>document.getElementById(id).textContent='—');
+    document.getElementById('peso-lista').innerHTML='<div class="no-data">Nenhum registro ainda</div>';
+    if(pChart){pChart.destroy();pChart=null;}
+    document.getElementById('dash-peso').textContent='— kg';
+    return;
+  }
+  const ini=parseFloat(arr[0].peso_kg),cur=parseFloat(arr[arr.length-1].peso_kg);
+  const dlt=Math.round((cur-ini)*10)/10;
+  document.getElementById('ps-ini').textContent=ini.toFixed(1);
+  document.getElementById('ps-cur').textContent=cur.toFixed(1);
+  document.getElementById('ps-dlt').textContent=(dlt>0?'+':'')+dlt;
+  document.getElementById('dash-peso').textContent=cur.toFixed(1)+' kg';
+  document.getElementById('dash-peso-delta').textContent=(dlt===0?'sem variação':(dlt<0?dlt+' kg desde início':'+'+dlt+' kg desde início'));
+  const labels=arr.map(p=>{const d=new Date(p.data+'T12:00:00');return d.getDate()+'/'+(d.getMonth()+1);});
+  const data=arr.map(p=>parseFloat(p.peso_kg));
+  const ctx=document.getElementById('peso-chart').getContext('2d');
+  if(pChart)pChart.destroy();
+  pChart=new Chart(ctx,{type:'line',data:{labels,datasets:[{data,borderColor:'#2D6A4F',backgroundColor:'rgba(45,106,79,0.08)',borderWidth:2,pointBackgroundColor:'#2D6A4F',pointRadius:4,fill:true,tension:.35}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:10},color:'#999'}},y:{grid:{color:'#EEECE8'},ticks:{font:{size:10},color:'#999'},suggestedMin:Math.min(...data)-2,suggestedMax:Math.max(...data)+2}}}});
+  const rev=[...arr].reverse();
+  document.getElementById('peso-lista').innerHTML=rev.map((p,i)=>{
+    let dh='';const prev=rev[i+1];
+    if(prev){const dd=Math.round((parseFloat(p.peso_kg)-parseFloat(prev.peso_kg))*10)/10;if(dd!==0)dh=`<span class="pdelta ${dd<0?'dn':'dp'}">${dd>0?'+':''}${dd}</span>`;}
+    const d=new Date(p.data+'T12:00:00');
+    return `<div class="pe"><span class="pe-date">${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}</span><span><span class="pe-val">${parseFloat(p.peso_kg).toFixed(1)} kg</span>${dh}</span><button class="btn-d" onclick="deletePeso('${p.id}')">×</button></div>`;
+  }).join('');
+}
+
+// =========================================
+// GASTOS
+// =========================================
+function initGastosMes(){
+  const sel=document.getElementById('gastos-filtro-mes');
+  sel.innerHTML='';
+  for(let i=0;i<6;i++){
+    const d=new Date(now.getFullYear(),now.getMonth()-i,1);
+    const val=d.getFullYear()+'-'+(String(d.getMonth()+1).padStart(2,'0'));
+    const lbl=MESES_FULL[d.getMonth()]+' '+d.getFullYear();
+    const opt=document.createElement('option');
+    opt.value=val;opt.textContent=lbl;
+    sel.appendChild(opt);
+  }
+}
+async function loadGastos(){
+  const mes=document.getElementById('gastos-filtro-mes').value;
+  const [ano,m]=mes.split('-');
+  const ini=`${ano}-${m}-01`;
+  const fim=new Date(parseInt(ano),parseInt(m),1).toISOString().split('T')[0];
+  const data=await sbGet('nutri_gastos',`?data=gte.${ini}&data=lt.${fim}&order=data.desc`);
+  if(!data){document.getElementById('gastos-lista').innerHTML='<div class="no-data">Erro ao carregar</div>';return;}
+  let entradas=0,saidas=0;
+  data.forEach(g=>{if(g.tipo==='entrada')entradas+=parseFloat(g.valor);else saidas+=parseFloat(g.valor);});
+  document.getElementById('gst-entradas').textContent=fmt(entradas);
+  document.getElementById('gst-saidas').textContent=fmt(saidas);
+  if(!data.length){document.getElementById('gastos-lista').innerHTML='<div class="no-data">Nenhum lançamento neste mês</div>';return;}
+  const CATS={alimentacao:'🍽️',mercado:'🛒',swile:'💳',suplemento:'💊',treino:'🥊',outro:'📌'};
+  document.getElementById('gastos-lista').innerHTML=data.map(g=>{
+    const d=new Date(g.data+'T12:00:00');
+    return `<div class="gasto-item">
+      <div class="gasto-tipo ${g.tipo}">${CATS[g.categoria]||'📌'}</div>
+      <div class="gasto-info">
+        <div class="gasto-desc">${g.descricao}</div>
+        <div class="gasto-meta">${d.getDate()}/${d.getMonth()+1} · <span class="tag tag-${g.categoria}">${g.categoria}</span> · ${g.meio_pagamento}</div>
+      </div>
+      <div class="gasto-val ${g.tipo}">${g.tipo==='entrada'?'+':'−'}${fmt(g.valor)}</div>
+      <button class="btn-d" onclick="deleteGasto('${g.id}')">×</button>
+    </div>`;
+  }).join('');
+}
+async function salvarGasto(){
+  const tipo=document.getElementById('mg-tipo').value;
+  const cat=document.getElementById('mg-cat').value;
+  const desc=document.getElementById('mg-desc').value.trim();
+  const val=parseFloat(document.getElementById('mg-val').value);
+  const meio=document.getElementById('mg-meio').value;
+  const data=document.getElementById('mg-data').value||TODAY;
+  if(!desc||isNaN(val)||val<=0){alert('Preencha descrição e valor!');return;}
+  const btn=document.getElementById('mg-salvar');
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span>';
+  await sbPost('nutri_gastos',{tipo,categoria:cat,descricao:desc,valor:val,meio_pagamento:meio,data});
+  btn.disabled=false;btn.textContent='Salvar';
+  closeModal('modal-gasto');
+  document.getElementById('mg-desc').value='';
+  document.getElementById('mg-val').value='';
+  loadGastos();loadDash();
+}
+async function deleteGasto(id){
+  if(!confirm('Excluir lançamento?'))return;
+  await sbDelete('nutri_gastos',`?id=eq.${id}`);
+  loadGastos();loadDash();
+}
+
+// =========================================
+// CUSTO DIETA
+// =========================================
+let CITENS=[];
+async function renderCusto(){
+  const data=await sbGet('nutri_custos','?order=categoria.asc,nome.asc');
+  if(!data)return;
+  CITENS=data;
+  let cats={};
+  data.forEach(it=>{if(!cats[it.categoria])cats[it.categoria]=[];cats[it.categoria].push(it);});
+  let html='';
+  Object.entries(cats).forEach(([cat,items])=>{
+    html+=`<div style="font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.5px;color:var(--tx3);padding:10px 0 4px">${cat}</div>`;
+    items.forEach(it=>{
+      html+=`<div class="custo-i">
+        <div class="custo-nome"><div style="font-size:13px">${it.nome}</div></div>
+        <input class="custo-inp" type="number" id="ci-${it.id}" value="${parseFloat(it.preco).toFixed(2)}" step=".5" min="0"
+          onchange="updateCusto('${it.id}',parseFloat(this.value)||0)">
+      </div>`;
+    });
+  });
+  document.getElementById('custo-lista').innerHTML=html;
+  calcCustoTotal();
+}
+async function updateCusto(id,val){
+  await sbPatch('nutri_custos',`?id=eq.${id}`,{preco:val,updated_at:new Date().toISOString()});
+  calcCustoTotal();
+}
+function calcCustoTotal(){
+  let sem=0;
+  CITENS.forEach(it=>{const inp=document.getElementById('ci-'+it.id);if(inp)sem+=parseFloat(inp.value)||0;});
+  document.getElementById('custo-sem').textContent=fmt(sem);
+  const men=sem*4;
+  document.getElementById('custo-men').textContent=fmt(men);
+  const supp=parseFloat(document.getElementById('supp-c')?.value)||0;
+  const creat=parseFloat(document.getElementById('creat-c')?.value)||0;
+  const total=men+supp+creat;
+  document.getElementById('custo-men-total').textContent=fmt(total);
+  const bar=document.getElementById('total-bar-men');
+  if(bar)bar.className='total-bar'+(total>600?' warn':'');
+}
+
+// =========================================
+// COMPRAS
+// =========================================
+const COMPRAS_DATA={
+  'Proteínas':[{n:'Frango peito ~1kg',p:'~R$17'},{n:'Ovos (dúzia)',p:'~R$13'},{n:'Atum em lata (3x)',p:'~R$15'},{n:'Ricota (~250g)',p:'~R$8'}],
+  'Carboidratos':[{n:'Arroz integral 1kg',p:'~R$6'},{n:'Feijão carioca 500g',p:'~R$5'},{n:'Pão de forma integral',p:'~R$8'},{n:'Farelo de aveia',p:'~R$5'},{n:'Biscoito água e sal integral',p:'~R$4'}],
+  'Laticínios':[{n:'Leite desnatado 2L',p:'~R$10'}],
+  'Frutas':[{n:'Banana cacho ~1,5kg',p:'~R$6'},{n:'Maçã saco',p:'~R$9'},{n:'Mamão 1 unid.',p:'~R$5'}],
+  'Verduras':[{n:'Alface',p:'~R$3'},{n:'Tomate ~500g',p:'~R$4'},{n:'Cenoura ~500g',p:'~R$3'}],
+  'Básicos':[{n:'Azeite extra virgem pequeno',p:'~R$12'},{n:'Linhaça dourada moída',p:'~R$7'},{n:'Adoçante Sucralose',p:'~R$5'}],
+};
+function getCS(){return JSON.parse(localStorage.getItem('nutri3_compras')||'{}');}
+function saveCS(s){localStorage.setItem('nutri3_compras',JSON.stringify(s));}
+function toggleCompra(k){const s=getCS();s[k]=!s[k];saveCS(s);renderCompras();}
+function clearCompras(){saveCS({});renderCompras();}
+function renderCompras(){
+  const s=getCS();
+  let html='';
+  Object.entries(COMPRAS_DATA).forEach(([cat,items])=>{
+    html+=`<div class="cs"><div class="cs-title">${cat}</div>`;
+    items.forEach(it=>{
+      const k=(cat+'_'+it.n).replace(/'/g,"\\'");
+      const bought=!!s[cat+'_'+it.n];
+      html+=`<div class="ci ${bought?'bought':''}" onclick="toggleCompra('${k}')"><div class="cc"></div><div class="ci-name">${it.n}</div><div class="ci-preco">${it.p}</div></div>`;
+    });
+    html+='</div>';
+  });
+  document.getElementById('compras-lista').innerHTML=html;
+}
+
+// =========================================
+// IMAGENS / UPLOAD
+// =========================================
+async function uploadImagens(files){
+  if(!files||!files.length)return;
+  const tipo=document.getElementById('img-tipo-sel').value;
+  for(const file of files){
+    const ext=file.name.split('.').pop();
+    const path=`${tipo}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+    setSyncState('loading');
+    const r=await fetch(`${SB_URL}/storage/v1/object/nutri-imagens/${path}`,{
+      method:'POST',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':file.type,'x-upsert':'true'},body:file
+    });
+    if(r.ok){
+      const url=`${SB_URL}/storage/v1/object/public/nutri-imagens/${path}`;
+      await sbPost('nutri_imagens',{nome:file.name,url,bucket:'nutri-imagens',tipo});
+    }
+    setSyncState('ok');
+  }
+  renderImagens();
+}
+async function renderImagens(){
+  const data=await sbGet('nutri_imagens','?order=created_at.desc');
+  if(!data){document.getElementById('img-grid').innerHTML='<div class="no-data" style="grid-column:1/-1">Erro ao carregar</div>';return;}
+  if(!data.length){document.getElementById('img-grid').innerHTML='<div class="no-data" style="grid-column:1/-1">Nenhuma foto ainda</div>';return;}
+  document.getElementById('img-grid').innerHTML=data.map(img=>`
+    <div class="img-card">
+      <img src="${img.url}" alt="${img.nome}" onclick="openImgModal('${img.url}')">
+      <div class="img-card-overlay"><span class="img-del" onclick="deleteImagem(event,'${img.id}','${img.url}')">🗑</span></div>
+    </div>
+  `).join('');
+}
+async function deleteImagem(e,id,url){
+  e.stopPropagation();
+  if(!confirm('Excluir foto?'))return;
+  const path=url.split('/nutri-imagens/')[1];
+  await fetch(`${SB_URL}/storage/v1/object/nutri-imagens/${path}`,{method:'DELETE',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}});
+  await sbDelete('nutri_imagens',`?id=eq.${id}`);
+  renderImagens();
+}
+function openImgModal(url){document.getElementById('modal-img-src').src=url;document.getElementById('modal-img').classList.add('open');}
+
+// =========================================
+// TRACKER
+// =========================================
+let trackerMesOffset=0;
+async function renderTracker(){
+  const d=new Date(now.getFullYear(),now.getMonth()+trackerMesOffset,1);
+  const ano=d.getFullYear(),mes=d.getMonth();
+  document.getElementById('tracker-mes-label').textContent=MESES_FULL[mes]+' '+ano;
+  const ini=`${ano}-${String(mes+1).padStart(2,'0')}-01`;
+  const fim=new Date(ano,mes+1,1).toISOString().split('T')[0];
+  const data=await sbGet('nutri_daily',`?data=gte.${ini}&data=lt.${fim}`);
+  const byDate={};(data||[]).forEach(d=>byDate[d.data]=d);
+  const firstDay=new Date(ano,mes,1).getDay();
+  const diasMes=new Date(ano,mes+1,0).getDate();
+  const DLABELS=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  document.getElementById('tracker-day-labels').innerHTML=DLABELS.map(l=>`<div class="tl">${l}</div>`).join('');
+  let cells='';
+  for(let i=0;i<firstDay;i++)cells+=`<div class="tc empty"></div>`;
+  let completos=0,parciais=0,treinos=0;
+  for(let day=1;day<=diasMes;day++){
+    const dateStr=`${ano}-${String(mes+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    const rec=byDate[dateStr];
+    const isToday=dateStr===TODAY;
+    let cls='none',score=0;
+    if(rec){
+      const refs=[rec.ref_desjejum,rec.ref_colacao,rec.ref_almoco,rec.ref_lanche1,rec.ref_lanche2,rec.ref_ceia,rec.ref_jantar].filter(Boolean).length;
+      score=refs;
+      if(refs>=6)cls='full';
+      else if(refs>=3)cls='partial';
+      if(refs>=6)completos++;
+      else if(refs>=3)parciais++;
+      if(rec.treino)treinos++;
+    }
+    cells+=`<button class="tc ${cls}${isToday?' today':''}" title="${dateStr}${rec?'\n'+score+'/7 refeições':''}">`+
+      `<div class="tc-num">${day}</div>${rec&&rec.treino?'<div style="font-size:7px">🥊</div>':''}</button>`;
+  }
+  document.getElementById('tracker-grid').innerHTML=cells;
+  const total=completos+parciais;
+  document.getElementById('tr-completos').textContent=completos;
+  document.getElementById('tr-parciais').textContent=parciais;
+  document.getElementById('tr-treinos').textContent=treinos;
+  document.getElementById('tr-pct').textContent=diasMes>0?Math.round((completos/diasMes)*100)+'%':'—%';
+}
+function trackerMes(dir){trackerMesOffset+=dir;renderTracker();}
+
+// =========================================
+// DASHBOARD
+// =========================================
+let dashChart=null;
+async function loadDash(){
+  const ini=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`;
+  const fim=new Date(now.getFullYear(),now.getMonth()+1,1).toISOString().split('T')[0];
+  const [gastos,pesos,daily]=await Promise.all([
+    sbGet('nutri_gastos',`?data=gte.${ini}&data=lt.${fim}&order=data.desc`),
+    sbGet('nutri_peso','?order=data.desc&limit=2'),
+    sbGet('nutri_daily',`?data=gte.${ini}&data=lt.${fim}`)
+  ]);
+  // gastos
+  if(gastos){
+    let total=0,swile_in=0,swile_out=0;
+    const byCat={};
+    gastos.forEach(g=>{
+      if(g.tipo==='saida'){total+=parseFloat(g.valor);const c=g.categoria;byCat[c]=(byCat[c]||0)+parseFloat(g.valor);}
+      if(g.meio_pagamento==='swile'&&g.tipo==='entrada')swile_in+=parseFloat(g.valor);
+      if(g.meio_pagamento==='swile'&&g.tipo==='saida')swile_out+=parseFloat(g.valor);
+    });
+    document.getElementById('dash-gasto-mes').textContent=fmt(total);
+    document.getElementById('dash-gasto-sub').textContent='meta: R$ 500–600/mês';
+    document.getElementById('dash-swile').textContent=fmt(swile_in-swile_out);
+    // chart
+    const ctx=document.getElementById('dash-chart').getContext('2d');
+    if(dashChart)dashChart.destroy();
+    const CCOLORS={alimentacao:'#1D4ED8',mercado:'#2D6A4F',swile:'#7C3AED',suplemento:'#B86B22',treino:'#C0392B',outro:'#999'};
+    const labels=Object.keys(byCat);
+    const vals=labels.map(l=>byCat[l]);
+    if(labels.length){
+      dashChart=new Chart(ctx,{type:'doughnut',data:{labels,datasets:[{data:vals,backgroundColor:labels.map(l=>CCOLORS[l]||'#999'),borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{size:11},boxWidth:12}}}}});
+    }
+    // últimos
+    document.getElementById('dash-ultimos').innerHTML=gastos.slice(0,5).map(g=>{
+      const d=new Date(g.data+'T12:00:00');
+      const CATS={alimentacao:'🍽️',mercado:'🛒',swile:'💳',suplemento:'💊',treino:'🥊',outro:'📌'};
+      return `<div class="gasto-item"><div class="gasto-tipo ${g.tipo}">${CATS[g.categoria]||'📌'}</div><div class="gasto-info"><div class="gasto-desc">${g.descricao}</div><div class="gasto-meta">${d.getDate()}/${d.getMonth()+1}</div></div><div class="gasto-val ${g.tipo}">${g.tipo==='entrada'?'+':'−'}${fmt(g.valor)}</div></div>`;
+    }).join('')||'<div class="no-data">Sem lançamentos este mês</div>';
+  }
+  // peso
+  if(pesos&&pesos.length){
+    const cur=parseFloat(pesos[0].peso_kg);
+    document.getElementById('dash-peso').textContent=cur.toFixed(1)+' kg';
+    if(pesos.length>1){const d=Math.round((cur-parseFloat(pesos[1].peso_kg))*10)/10;document.getElementById('dash-peso-delta').textContent=(d<0?d:'+'+d)+' kg vs anterior';}
+  }
+  // streak
+  if(daily){
+    let streak=0;
+    const today=new Date();
+    for(let i=0;i<30;i++){
+      const d=new Date(today);d.setDate(d.getDate()-i);
+      const ds=d.toISOString().split('T')[0];
+      const rec=daily.find(r=>r.data===ds);
+      if(rec&&[rec.ref_desjejum,rec.ref_colacao,rec.ref_almoco,rec.ref_lanche1,rec.ref_lanche2,rec.ref_ceia,rec.ref_jantar].filter(Boolean).length>=6)streak++;
+      else break;
+    }
+    document.getElementById('dash-streak').textContent=streak+' 🔥';
+  }
+}
+
+// =========================================
+// IA CHAT
+// =========================================
+let chatHistory=[{role:'user',content:`Você é um assistente nutricional chamado Nutri, ajudando Jabez (20 anos, 90kg, 181cm) com seu plano alimentar da nutricionista Juliet Marzalek. O plano tem ~2160 kcal/dia, 7 refeições, horários: desjejum 07h, colação 09h30, almoço 12h, lanche 14h30, lanche 17h, ceia 17h30 (pré-treino), jantar 21h (pós-treino). Jabez treina jiu-jitsu e boxe das 19h30 às 20h30. Suplementos: aminoácidos (1 sachê/dia pós-treino) e creatina (3g/dia). Quando o usuário mencionar um gasto/compra, extraia: tipo (entrada/saida), categoria, descrição, valor, meio de pagamento. Responda sempre em português, de forma curta e amigável.`}];
+async function sendChat(){
+  const inp=document.getElementById('chat-inp');
+  const msg=inp.value.trim();
+  if(!msg)return;
+  inp.value='';
+  const msgs=document.getElementById('chat-msgs');
+  msgs.innerHTML+=`<div class="msg user">${msg}</div>`;
+  msgs.innerHTML+=`<div class="msg ai loading" id="ai-typing">Digitando...</div>`;
+  msgs.scrollTop=msgs.scrollHeight;
+  document.getElementById('chat-btn').disabled=true;
+  chatHistory.push({role:'user',content:msg});
+  try{
+    const r=await fetch(`${SB_URL}/functions/v1/nutri-ai`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY},
+      body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:600,system:'Você é Nutri, assistente nutricional de Jabez. Plano da Dr. Juliet Marzalek: 2160 kcal/dia, 7 refeições, treino 19h30-20h30. Seja conciso e amigável. Se o usuário mencionar gasto/compra, responda confirmando os dados e sugira o lançamento.',messages:chatHistory.slice(1)})
+    });
+    const d=await r.json();
+    const resp=d.content?.[0]?.text||'Não consegui processar.';
+    document.getElementById('ai-typing').remove();
+    msgs.innerHTML+=`<div class="msg ai">${resp}</div>`;
+    chatHistory.push({role:'assistant',content:resp});
+    // auto-detect gasto
+    const gastoMatch=resp.match(/R\$\s*([\d,\.]+)/);
+    if(gastoMatch&&(msg.toLowerCase().includes('gastei')||msg.toLowerCase().includes('comprei')||msg.toLowerCase().includes('paguei'))){
+      const sugerido=resp;
+      msgs.innerHTML+=`<div class="msg ai">Quer que eu registre esse gasto automaticamente? <button onclick="openModal('modal-gasto')" style="background:var(--g);color:#fff;border:none;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:12px;margin-left:4px">+ Registrar</button></div>`;
+    }
+  }catch(e){
+    document.getElementById('ai-typing').remove();
+    msgs.innerHTML+=`<div class="msg ai">Erro ao conectar com IA. Tente novamente.</div>`;
+  }
+  document.getElementById('chat-btn').disabled=false;
+  msgs.scrollTop=msgs.scrollHeight;
+}
+
+// =========================================
+// MODAL
+// =========================================
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.modal-bg').forEach(bg=>{bg.addEventListener('click',e=>{if(e.target===bg)bg.classList.remove('open');});});
+document.getElementById('mg-data').value=TODAY;
+
+// =========================================
+// INIT
+// =========================================
+initGastosMes();
+renderAgua();renderSupp();renderRef();renderTreino();
+loadDash();
+</script>
+</body>
+</html>
